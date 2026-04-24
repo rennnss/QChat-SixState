@@ -18,9 +18,6 @@ Built with [Qiskit](https://qiskit.org/) for quantum simulation and [Flask-Socke
 
 ## 📸 Screenshots
 
-### Role Selection
-![Role Selection](screenshots/role_selection.png)
-
 ### Chat Interface with QKD Visualization
 ![Chat Interface](screenshots/chat_interface.png)
 
