@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QKD Secure Chat</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+
+<body>
+    <!-- Role Selection Screen -->
+    <div id="role-screen" class="screen active">
+        <div class="role-container">
+            <div class="logo-section">
+                <div class="logo-icon">🔐</div>
+                <h1>Quantum Secure Chat</h1>
+                <p class="subtitle">End-to-end encryption powered by Six-State QKD Protocol</p>
+            </div>
+            <div class="role-cards">
+                <button class="role-card" onclick="joinAs('Alice')">
+                    <div class="role-avatar alice-avatar">A</div>
+                    <h2>Alice</h2>
+                    <p>Sender – Prepares &amp; encodes qubits</p>
+                    <span class="role-tag">Quantum Transmitter</span>
+                </button>
+                <button class="role-card" onclick="joinAs('Bob')">
+                    <div class="role-avatar bob-avatar">B</div>
+                    <h2>Bob</h2>
+                    <p>Receiver – Measures &amp; decodes qubits</p>
+                    <span class="role-tag">Quantum Receiver</span>
+                </button>
+            </div>
+            <div id="role-status" class="role-status"></div>
+        </div>
+    </div>
+
+    <!-- Chat Screen -->
+    <div id="chat-screen" class="screen">
+        <div class="chat-layout">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo-small">🔐</div>
+                    <span>QKD Chat</span>
+                </div>
+
+                <div class="user-info">
+                    <div id="my-avatar" class="role-avatar-sm"></div>
+                    <div>
+                        <div id="my-role" class="user-name"></div>
+                        <div class="user-status">Online</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Connection</h3>
+                    <div id="peer-status" class="peer-status">
+                        <span class="status-dot offline"></span>
+                        <span>Waiting for partner...</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Eavesdropper</h3>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="eve-toggle" onchange="toggleEve()">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Eve (🕵️)</span>
+                    </label>
+                    <div id="eve-indicator" class="eve-indicator hidden">
+                        <span>⚠️ Eve is intercepting!</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Protocol Info</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Protocol</span>
+                            <span class="info-value">Six-State</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Bases</span>
+                            <span class="info-value">Z, X, Y</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Sifting Rate</span>
+                            <span class="info-value">~33%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Eve QBER</span>
+                            <span class="info-value">~33%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Area -->
+            <div class="main-area">
+                <!-- Header -->
+                <div class="chat-header">
+                    <div class="header-left">
+                        <h2>🔐 Quantum Encrypted Chat</h2>
+                        <span id="header-status" class="header-badge">Waiting for connection</span>
+                    </div>
+                    <div class="header-right-btns">
+                        <button class="btn-help" onclick="toggleHelp()" title="How does this work?">?</button>
+                        <button class="btn-qkd-toggle" onclick="toggleQKDPanel()">
+                            <span>⚛️ QKD Process</span>
+                            <span id="qkd-toggle-arrow" class="arrow">▼</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat + QKD Container -->
+                <div class="content-area">
+                    <!-- Chat Messages -->
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="welcome-msg">
+                            <div class="welcome-icon">⚛️</div>
+                            <h3>Welcome to Quantum Secure Chat</h3>
+                            <p>Messages are encrypted using quantum-generated keys via the Six-State QKD protocol. Every
+                                message triggers a full quantum key distribution process, visible in real-time.</p>
+                        </div>
+                    </div>
+
+                    <!-- QKD Visualization Panel -->
+                    <div id="qkd-panel" class="qkd-panel">
+                        <div class="qkd-panel-header">
+                            <h3>⚛️ QKD Protocol Visualization</h3>
+                            <span class="qkd-panel-sub">Watch the quantum key distribution process in real-time</span>
+                        </div>
+                        <div id="qkd-steps" class="qkd-steps">
+                            <div class="qkd-placeholder">
+                                <span>Send a message to see the QKD process</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Input -->
+                <div class="message-input-area">
+                    <div class="input-wrapper">
+                        <input type="text" id="message-input" placeholder="Type a message..."
+                            onkeypress="if(event.key==='Enter') sendMessage()" autocomplete="off" disabled>
+                        <button id="send-btn" class="send-btn" onclick="sendMessage()" disabled>
+                            <span>Send 🔒</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="help-modal" onclick="closeHelpOnBackdrop(event)">
+        <div class="help-content">
+            <div class="help-header">
+                <h2>⚛️ How Quantum Key Distribution Works</h2>
+                <button class="help-close" onclick="toggleHelp()">✕</button>
+            </div>
+            <div class="help-body">
+                <div class="help-intro">
+                    <p>This chat uses the <strong>Six-State QKD Protocol</strong> to generate encryption keys using
+                        quantum mechanics. Unlike classical encryption, any eavesdropping attempt <em>physically
+                            disturbs</em> the quantum states, making it detectable.</p>
+                    <p>Here's exactly what happens each time you send a message:</p>
+                </div>
+
+                <div class="help-step">
+                    <div class="help-step-num">1</div>
+                    <div class="help-step-content">
+                        <h3>🔵 Alice Prepares Qubits</h3>
+                        <p>The sender (Alice) generates a string of random classical bits (0s and 1s). For each bit, she
+                            randomly picks one of <strong>three measurement bases</strong>:</p>
+                        <ul>
+                            <li><strong>Z basis (⊕)</strong> — Encodes 0 as |0⟩ and 1 as |1⟩ (standard basis)</li>
+                            <li><strong>X basis (⊗)</strong> — Encodes 0 as |+⟩ and 1 as |-⟩ (Hadamard basis)</li>
+                            <li><strong>Y basis (◉)</strong> — Encodes 0 as |+i⟩ and 1 as |-i⟩ (circular basis)</li>
+                        </ul>
+                        <p>Each bit is encoded into a single qubit using its chosen basis. This creates a quantum
+                            circuit for each qubit, which is then sent over the quantum channel. Using 3 bases instead
+                            of 2 (like BB84) makes eavesdropping harder to hide.</p>
+                    </div>
+                </div>
+
+                <div class="help-step">
+                    <div class="help-step-num">2</div>
+                    <div class="help-step-content">
+                        <h3>📡 Quantum Channel Transmission</h3>
+                        <p>The prepared qubits travel from Alice to Bob through a quantum channel (e.g., a fiber-optic
+                            cable carrying single photons).</p>
+                        <p><strong>If Eve is enabled:</strong> She performs an <em>intercept-resend attack</em>. For
+                            each qubit, Eve:</p>
+                        <ol>
+                            <li>Intercepts the qubit in transit</li>
+                            <li>Randomly picks a basis and measures it (collapsing the quantum state)</li>
+                            <li>Prepares a new qubit based on her measurement result and sends it to Bob</li>
+                        </ol>
+                        <p>Because Eve doesn't know Alice's basis, she picks the wrong one ~2/3 of the time. When she
+                            measures in the wrong basis, she gets a random result and destroys the original quantum
+                            information. This is the key insight — <strong>quantum mechanics forbids perfect cloning of
+                                unknown states</strong> (No-Cloning Theorem).</p>
+                    </div>
+                </div>
+
+                <div class="help-step">
+                    <div class="help-step-num">3</div>
+                    <div class="help-step-content">
+                        <h3>🟢 Bob Measures Qubits</h3>
+                        <p>Bob receives each qubit and, independently of Alice, randomly picks one of the three bases
+                            (Z, X, or Y) to measure it in.</p>
+                        <p>If Bob picks the <strong>same basis</strong> Alice used → he gets Alice's exact bit
+                            (deterministic result).</p>
+                        <p>If Bob picks a <strong>different basis</strong> → he gets a completely random result (50/50
+                            chance), which is useless.</p>
+                        <p>At this point, Bob has a list of measurement results, but doesn't yet know which ones are
+                            correct.</p>
+                    </div>
+                </div>
+
+                <div class="help-step">
+                    <div class="help-step-num">4</div>
+                    <div class="help-step-content">
+                        <h3>🔗 Basis Reconciliation (Sifting)</h3>
+                        <p>Alice and Bob publicly announce which <strong>basis</strong> they used for each qubit (but
+                            NOT the bit values). They keep only the bits where they happened to use the same basis and
+                            discard the rest.</p>
+                        <p>With 3 bases, each qubit has a <strong>1/3 chance</strong> of matching, so roughly 33% of
+                            qubits survive sifting. (BB84 with 2 bases has 50% survival.)</p>
+                        <p>After sifting, Alice and Bob should have <em>identical</em> bit strings — unless the channel
+                            was noisy or someone was eavesdropping.</p>
+                    </div>
+                </div>
+
+                <div class="help-step">
+                    <div class="help-step-num">5</div>
+                    <div class="help-step-content">
+                        <h3>📊 QBER Estimation</h3>
+                        <p>Alice and Bob sacrifice a random subset (~50%) of their sifted bits and publicly compare them
+                            to estimate the <strong>Quantum Bit Error Rate (QBER)</strong>.</p>
+                        <p><strong>No Eve, no noise → QBER ≈ 0%</strong> (bits match perfectly).</p>
+                        <p><strong>With Eve → QBER ≈ 33%</strong> for Six-State protocol. This is because Eve guesses
+                            the wrong basis 2/3 of the time, and when she does, she has a 50% chance of flipping the
+                            bit: 2/3 × 1/2 = 1/3 ≈ 33%.</p>
+                        <p>The <strong>detection threshold</strong> is ~16.7% (half the theoretical Eve-QBER). If the
+                            measured QBER exceeds this, eavesdropping is suspected and the key is marked as compromised.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="help-step">
+                    <div class="help-step-num">6</div>
+                    <div class="help-step-content">
+                        <h3>🔑 Shared Key Generation</h3>
+                        <p>The remaining sifted bits (those NOT used for QBER estimation) become the <strong>shared
+                                secret key</strong>. Both Alice and Bob now hold identical random bit strings, generated
+                            via quantum mechanics.</p>
+                        <p>If QBER was below the threshold, the key is considered <strong>secure</strong> — no
+                            eavesdropper could have learned it without introducing detectable errors.</p>
+                        <p>In a full implementation, additional steps like <em>privacy amplification</em> (shortening
+                            the key using hash functions) and <em>information reconciliation</em> (error correction)
+                            would be performed. This demo shows the core QKD process.</p>
+                    </div>
+                </div>
+
+                <div class="help-step">
+                    <div class="help-step-num">7</div>
+                    <div class="help-step-content">
+                        <h3>🔒 Message Encryption (OTP)</h3>
+                        <p>The message is encrypted using a <strong>One-Time Pad (OTP)</strong> — the only encryption
+                            scheme that is <em>information-theoretically secure</em> (proven unbreakable, regardless of
+                            computational power).</p>
+                        <p>Each character is converted to 8-bit binary, then XOR'd bit-by-bit with the shared key:</p>
+                        <p><code>ciphertext = message ⊕ key</code></p>
+                        <p>The encrypted ciphertext (shown in hex) is meaningless without the key. OTP requires the key
+                            to be as long as the message and used only once — which is exactly what QKD provides: fresh
+                            random keys for every message.</p>
+                    </div>
+                </div>
+
+                <div class="help-step">
+                    <div class="help-step-num">8</div>
+                    <div class="help-step-content">
+                        <h3>🔓 Message Decryption</h3>
+                        <p>The receiver XOR's the ciphertext with their copy of the shared key to recover the original
+                            message:</p>
+                        <p><code>message = ciphertext ⊕ key</code></p>
+                        <p><strong>If no Eve:</strong> Alice and Bob's keys match perfectly → message decrypts correctly
+                            ✅</p>
+                        <p><strong>If Eve was present:</strong> Eve's interception corrupted some key bits → decryption
+                            may produce garbled text, and the QBER will have flagged the compromise ⚠️</p>
+                    </div>
+                </div>
+
+                <div class="help-footer">
+                    <h3>🕵️ About Eve's Attack</h3>
+                    <p>Toggle the <strong>Eve switch</strong> in the sidebar to simulate an <em>intercept-resend
+                            attack</em>. Watch how QBER jumps from ~0% to ~33%, proving that quantum mechanics makes
+                        eavesdropping <strong>fundamentally detectable</strong> — something impossible in classical
+                        cryptography.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
