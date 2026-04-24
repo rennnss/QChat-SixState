@@ -1,155 +1,102 @@
-# 🔐 Six-State Quantum Key Distribution Simulator
+# 🔐 QChat-SixState
 
-A **production-ready** implementation of the Six-State QKD protocol using [Qiskit](https://qiskit.org/), with full support for eavesdropping simulation, channel noise, comparative analysis against BB84, and interactive visualization.
+A real-time **quantum-encrypted chat application** powered by the **Six-State QKD Protocol**. Alice and Bob exchange messages encrypted with one-time pad keys generated via quantum key distribution — with every step of the quantum process visualized live.
 
-## 📖 Theory
+Built with [Qiskit](https://qiskit.org/) for quantum simulation and [Flask-SocketIO](https://flask-socketio.readthedocs.io/) for real-time communication.
 
-### Quantum Key Distribution
+---
 
-QKD allows two parties (Alice and Bob) to establish a shared secret key with security guaranteed by the laws of quantum mechanics. Any eavesdropping attempt by Eve inevitably disturbs the quantum states, revealing her presence.
+## ✨ Features
 
-### Six-State Protocol
+- **Real-time QKD visualization** — Watch qubit preparation, channel transmission, basis reconciliation, QBER estimation, key generation, encryption, and decryption unfold step-by-step
+- **Eavesdropper simulation** — Toggle Eve's intercept-resend attack and see how QBER spikes from ~0% to ~33%, proving quantum eavesdropping is fundamentally detectable
+- **One-Time Pad encryption** — Messages are XOR-encrypted with quantum-generated keys (information-theoretically secure)
+- **Premium dark UI** — Glassmorphism design with smooth animations, quantum state tables, and per-message security metrics
+- **Built-in protocol guide** — Interactive help modal explaining every step of the Six-State protocol
 
-The Six-State protocol uses **three mutually unbiased bases** (MUBs):
+---
 
-| Basis | States | Qiskit Gates |
-|-------|--------|-------------|
-| **Z** (computational) | \|0⟩, \|1⟩ | Identity, X |
-| **X** (Hadamard) | \|+⟩, \|−⟩ | H, XH |
-| **Y** (circular) | \|+i⟩, \|−i⟩ | HS, XHS |
+## 📸 Screenshots
 
-**Protocol steps:**
-1. **Preparation**: Alice encodes random bits in random bases (Z, X, Y)
-2. **Transmission**: Qubits sent through quantum channel
-3. **Measurement**: Bob measures in randomly chosen bases
-4. **Sifting**: Keep bits where bases match (~1/3 retained)
-5. **QBER estimation**: Compare a sample to detect errors
-6. **Key generation**: Remaining bits form the shared secret key
+### Role Selection
+![Role Selection](screenshots/role_selection.png)
 
-### Comparison with BB84
+### Chat Interface with QKD Visualization
+![Chat Interface](screenshots/chat_interface.png)
 
-| Property | Six-State | BB84 |
-|----------|-----------|------|
-| Bases | Z, X, Y | Z, X |
-| Sifting rate | ~1/3 | ~1/2 |
-| Eve's QBER (intercept-resend) | ~33% | ~25% |
-| Max tolerable QBER | ~27.6% | ~11% |
-| Security margin | Higher | Lower |
+---
 
-### Intercept-Resend Attack
+## 🛠️ Local Setup
 
-Eve intercepts each qubit, measures it in a random basis, and re-prepares based on her result. When her basis doesn't match Alice's, she introduces errors detectable through QBER estimation.
+### Prerequisites
 
-## 🛠️ Installation
+- **Python 3.10+**
+- **pip** (comes with Python)
+- **Git**
+
+### Installation
 
 ```bash
 # Clone the repository
-git clone <repo-url> && cd Quantum
+git clone https://github.com/rennnss/QChat-SixState.git
+cd QChat-SixState
 
-# Create virtual environment (recommended)
-python -m venv venv && source venv/bin/activate
+# Create & activate a virtual environment
+python -m venv venv
+source venv/bin/activate        # macOS / Linux
+# venv\Scripts\activate         # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### Requirements
-- Python ≥ 3.10
-- Qiskit ≥ 1.0.0
-- Qiskit Aer ≥ 0.13.0
-- NumPy, Matplotlib, Streamlit, pytest
-
-## 🚀 Usage
-
-### CLI
+### Running the App
 
 ```bash
-# Basic Six-State simulation
-python cli.py --n-qubits 500
-
-# With eavesdropper
-python cli.py --n-qubits 500 --eve
-
-# BB84 with noise
-python cli.py --n-qubits 1000 --protocol bb84 --noise-type depolarizing --noise-level 0.05
-
-# Compare protocols with plots
-python cli.py --n-qubits 1000 --protocol compare --plot
-
-# Full sweep analysis
-python cli.py --n-qubits 500 --protocol compare --eve --plot --sweep
+python chat/chat_server.py
 ```
 
-**CLI Options:**
+Open **two browser tabs** at [http://localhost:5050](http://localhost:5050):
+1. Join as **Alice** in one tab
+2. Join as **Bob** in the other tab
+3. Start chatting — every message triggers a full QKD key exchange, visible in real-time
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--n-qubits` | Number of qubits | 1000 |
-| `--eve` | Enable eavesdropper | Off |
-| `--noise-type` | `none`, `bit_flip`, `depolarizing` | `none` |
-| `--noise-level` | Noise probability [0–1] | 0.0 |
-| `--protocol` | `six_state`, `bb84`, `compare` | `six_state` |
-| `--plot` | Generate plots | Off |
-| `--sweep` | Run parameter sweeps | Off |
+> **Tip:** Toggle the **Eve switch** in the sidebar to simulate an eavesdropper and watch the QBER increase.
 
-### Streamlit UI
-
-```bash
-streamlit run app.py
-```
-
-Interactive dashboard with:
-- Sidebar controls for all parameters
-- Real-time QBER and key rate metrics
-- Protocol comparison mode
-- Tabbed visualizations with parameter sweeps
-
-### Demo Notebook
-
-```bash
-jupyter notebook notebooks/demo.ipynb
-```
-
-## 📊 Sample Results
-
-### No Eve (ideal channel)
-```
-Six-State: QBER ≈ 0.00%, Sifting ≈ 33%, Key Rate ≈ 0.167
-BB84:      QBER ≈ 0.00%, Sifting ≈ 50%, Key Rate ≈ 0.250
-```
-
-### With Eve (intercept-resend)
-```
-Six-State: QBER ≈ 33%, Eve DETECTED ⚠️
-BB84:      QBER ≈ 25%, Eve DETECTED ⚠️
-```
+---
 
 ## 📁 Project Structure
 
 ```
-Quantum/
-├── cli.py                    # CLI entry point
-├── app.py                    # Streamlit dashboard
-├── requirements.txt
+QChat-SixState/
+├── chat/
+│   ├── chat_server.py            # Flask + SocketIO server (entry point)
+│   ├── templates/index.html      # Chat UI
+│   └── static/
+│       ├── app.js                # Client-side logic & QKD visualization
+│       └── style.css             # Premium dark theme
 ├── quantum/
-│   ├── utils.py              # Basis enum, circuit builders
-│   ├── alice.py              # Sender (qubit preparation)
-│   ├── bob.py                # Receiver (measurement)
-│   ├── eve.py                # Eavesdropper (intercept-resend)
-│   └── channel.py            # Noise models
+│   ├── alice.py                  # Sender — qubit preparation
+│   ├── bob.py                    # Receiver — qubit measurement
+│   ├── eve.py                    # Eavesdropper — intercept-resend attack
+│   ├── channel.py                # Noise models (bit-flip, depolarizing)
+│   └── utils.py                  # Basis enums, circuit builders
 ├── protocols/
-│   ├── base.py               # Abstract protocol + sifting
-│   ├── six_state.py          # Six-State implementation
-│   └── bb84.py               # BB84 implementation
+│   ├── base.py                   # Abstract QKD protocol + sifting
+│   ├── six_state.py              # Six-State protocol implementation
+│   └── bb84.py                   # BB84 protocol implementation
 ├── analysis/
-│   ├── qber.py               # QBER computation
-│   └── key_rate.py           # Key rate estimation
+│   ├── qber.py                   # QBER computation & sampling
+│   └── key_rate.py               # Secure & effective key rate estimation
 ├── visualization/
-│   └── plots.py              # Matplotlib visualizations
-├── tests/                    # Comprehensive pytest suite
-└── notebooks/
-    └── demo.ipynb            # Interactive demo
+│   └── plots.py                  # Matplotlib visualizations
+├── tests/                        # Comprehensive pytest suite (64 tests)
+├── screenshots/                  # UI screenshots
+├── requirements.txt
+└── README.md
 ```
+
+---
 
 ## 🧪 Testing
 
@@ -157,12 +104,45 @@ Quantum/
 # Run all tests
 python -m pytest tests/ -v
 
-# Run specific test module
+# Run Six-State protocol tests only
 python -m pytest tests/test_six_state.py -v
-
-# With coverage
-python -m pytest tests/ -v --tb=short
 ```
+
+---
+
+## 📖 How It Works
+
+The **Six-State protocol** uses three mutually unbiased bases (MUBs):
+
+| Basis | States | Description |
+|-------|--------|-------------|
+| **Z** (⊕) | \|0⟩, \|1⟩ | Computational basis |
+| **X** (⊗) | \|+⟩, \|−⟩ | Hadamard basis |
+| **Y** (◉) | \|+i⟩, \|−i⟩ | Circular basis |
+
+**When you send a message, this happens:**
+
+1. **Alice prepares** random qubits in random bases (Z, X, Y)
+2. **Quantum channel** transmits qubits (Eve may intercept)
+3. **Bob measures** each qubit in a randomly chosen basis
+4. **Basis sifting** — keep only matching bases (~33% survive)
+5. **QBER estimation** — compare a sample to detect errors
+6. **Key generation** — remaining bits form the shared secret
+7. **OTP encryption** — message XOR'd with the quantum key
+8. **Decryption** — receiver XOR's ciphertext with their key copy
+
+### Eve's Attack
+
+When Eve intercepts, she guesses the wrong basis **2/3 of the time**, introducing a QBER of ~33% — making eavesdropping **always detectable**.
+
+| Property | Six-State | BB84 |
+|----------|-----------|------|
+| Bases | Z, X, Y | Z, X |
+| Sifting rate | ~33% | ~50% |
+| Eve's QBER | ~33% | ~25% |
+| Security margin | Higher | Lower |
+
+---
 
 ## 📄 License
 
